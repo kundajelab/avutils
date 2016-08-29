@@ -1,0 +1,324 @@
+import re
+import os
+import os.path
+import gzip
+from . import error_messages
+from . import util
+
+
+def get_file_handle(filename,mode="r"):
+    if (re.search('.gz$',filename) or re.search('.gzip',filename)):
+        if (mode=="r"):
+            mode="rb";
+        elif (mode=="w"):
+            #I think write will actually append if the file already
+            #exists...so you want to remove it if it exists
+            if os.path.isfile(filename):
+                os.remove(filename);
+        return gzip.open(filename,mode)
+    else:
+        return open(filename,mode) 
+
+
+def default_tab_seppd(s):
+    s = trim_newline(s)
+    s = split_by_delimiter(s)
+    return s
+
+
+def trim_newline(s):
+    return s.rstrip('\r\n')
+
+
+def split_by_delimiter(s, delimiter):
+    return s.split(delimiter)
+
+
+def split_by_tabs(s):
+    return split_by_delimiter(s,"\t")
+
+
+def process_line(line, i, ignore_input_title,
+                 transformation, action, progress_update=None):
+    if (i > 1 or (ignore_input_title==False)):
+        action(transformation(line),i)
+
+
+def print_progress(progress_update, i, file_name=None):
+    if progress_update is not None:
+        if (i%progress_update == 0):
+            print ("Processed "+str(i)+" lines"
+                   +str("" if file_name is None else " of "+file_name))
+
+
+def perform_action_on_each_line_of_file(
+    file_handle
+    #should be a function that accepts the
+    #preprocessed/filtered line and the line number
+    , action=None 
+    , transformation=default_tab_seppd
+    , ignore_input_title=False
+    , progress_update=None
+    , progress_update_file_name=None):
+
+    if (action_from_title is None and action is None):
+        raise ValueError("One of action_from_title or"
+                         +" action should not be None")
+    if (action_from_title is not None and action is not None):
+        raise ValueError("Only one of action_from_title or"
+                         +" action can be non-None")
+    if (action_from_title is not None and ignore_input_title == False):
+        raise ValueError("If action_from_title is not None,"
+                         +" ignore_input_title should probably be True"
+                         +" because it implies a title is present")
+    i = 0;
+    for line in file_handle:
+        i += 1;
+        if (i == 1 and action_from_title is not None):
+            action = action_from_title(line)
+        process_line(line, i, ignore_input_title,
+                     transformation, action, progress_update)
+        print_progress(progress_update, i, progress_update_file_name)
+
+    file_handle.close();
+
+
+def read_col_into_arr(file_handle, col=0, title_present=False):
+    arr = [];
+    def action(inp, line_number):
+        arr.append(inp[col]);
+    perform_action_on_each_line_of_file(
+        file_handle
+        , transformation=default_tab_seppd
+        , action=action
+        , ignore_input_title=title_present
+    );
+    return arr;
+
+
+def write_matrix_to_file(file_handle, rows, col_names=None, row_names=None):
+    if (col_names is not None):
+        file_handle.write(("rowName\t" if row_names is not None else "")
+                          +"\t".join(col_names)+"\n")
+    for i,row in enumerate(rows):
+        if (row_names is not None):
+            file_handle.write(row_names[i]+"\t")
+        stringified_row = [str(x) for x in row];
+        to_write = "\t".join(stringified_row)+"\n";
+        file_handle.write(to_write);
+    file_handle.close();
+
+
+class TitledMappingIterator(object):
+
+    def __init__(self, titled_mapping):
+        """
+            Returns an iterator over TitledArrs for
+            the keys in titled_mapping.mapping
+        """
+        self.titled_mapping = titled_mapping;
+        self.keys_iterator = iter(titled_mapping.mapping);
+
+    def next(self):
+        next_key = self.keys_iterator.next();
+        return self.titled_mapping.get_titled_arr_for_key(next_key);
+
+
+class TitledMapping(object):
+
+    def __init__(self, title_arr, flag_if_inconsistent=False):
+        """
+            When each key maps to an array, and each index
+            in the array is associated with a name.
+        """
+        self.mapping = OrderedDict() #mapping from name of a key to the values
+        self.title_arr = title_arr
+        self.col_name_to_index =\
+            dict((x,i) for (i,x) in enumerate(self.title_arr))
+        self.row_size = len(self.title_arr)
+        self.flag_if_inconsistent = flag_if_inconsistent
+
+    def key_presence_check(self, key):
+        """
+            Throws an error if the key is absent
+        """
+        if (key not in self.mapping):
+            raise RuntimeError("Key "+str(key)
+                  +" not in mapping; supported feature names are "
+                  +str(self.mapping.keys()))
+
+    def get_arr_for_key(self, key):
+        self.key_presence_check(key);
+        return self.mapping[key]
+
+    def get_titled_arr_for_key(self, key):
+        """
+            returns an instance of util.TitledArr which has: get_col(colName) and set_col(colName)
+        """
+        return TitledArr(self.title_arr, self.get_arr_for_key(key),
+                         self.col_name_to_index)
+
+    def add_key(self, key, arr):
+        if (len(arr) != self.row_size):
+            raise RuntimeError("arr should be of size "
+                    +str(self.row_size)+" but is of size "+str(len(arr)))
+        if (self.flag_if_inconsistent):
+            if key in self.mapping:
+                if (str(self.mapping[key]) != str(arr)):
+                    raise RuntimeError("Tried to add "+str(arr)
+                           +" for key "+str(key)+" but "
+                           +str(self.mapping[key])+" already present")
+        self.mapping[key] = arr
+
+    def __iter__(self):
+        """
+            Iterator is over instances of TitledArr!
+        """
+        return TitledMappingIterator(self)
+
+    def print_to_file(self, file_handle, includeRownames=True):
+        write_matrix_to_file(file_handle,
+         self.mapping.values(), self.title_arr,
+         [x for x in self.mapping.keys()])
+
+
+class TitledArr(object):
+
+    def __init__(self, title, arr, col_name_to_index=None):
+        assert len(title)==len(arr)
+        self.title = title
+        self.arr = arr
+        self.col_name_to_index = col_name_to_index
+
+    def get_col(self, colName):
+        assert self.col_name_to_index is not None
+        return self.arr[self.col_name_to_index[colName]]
+
+    def set_col(self, colName, value):
+        assert self.col_name_to_index is not None
+        self.arr[self.col_name_to_index[colName]] = value
+
+
+SubsetOfColumnsToUseMode = util.enum(set_of_column_names="set_of_column_names",
+                                     top_n="top_n")
+class SubsetOfColumnsToUseOptions(object):
+
+    def __init__(self, mode=SubsetOfColumnsToUseMode.set_of_column_names,
+                       column_names=None, N=None):
+        self.mode = mode
+        self.column_names = column_names
+        self.N = N
+        self.integrity_checks()
+
+    def integrity_checks(self):
+        if (self.mode == SubsetOfColumnsToUseMode.set_of_column_names):
+            error_messages.assert_parameter_irrelevant_for_mode(
+                "N", self.N, "subset_of_columns_to_use_mode", self.mode)
+            error_messages.assert_parameter_necessary_for_mode(
+                "column_names", self.column_names,
+                "subset_of_columns_to_use_mode", self.mode)
+        elif (self.mode == SubsetOfColumnsToUseMode.top_n):
+            error_messages.assert_parameter_irrelevant_for_mode(
+                "column_names", self.colum_names,
+                "subset_of_columns_to_use_mode", self.mode)
+            error_messages.assert_parameter_necessary_for_mode(
+                "N", self.N, "subset_of_columns_to_use_mode", self.mode)
+        else:
+            error_messages.unsupported_value_for_mode("mode", self.mode)
+
+
+def get_core_titled_mapping_action(subset_of_columns_to_use_options,
+                                   content_type,
+                                   content_start_index,
+                                   subset_of_rows_to_use=None,
+                                   key_columns=[0]):
+    (subset_of_rows_to_use_membership_dict =
+        dict((x,1) for x in subset_of_rows_to_use)
+        if subset_of_rows_to_use is not None else None)
+    indices_to_care_about_wrapper = util.VariableWrapper(None)
+    def titled_mapping_action(inp, line_number):
+        if (line_number==1): #handling of the title
+            if subset_of_columns_to_use_options is None:
+                column_ordering = inp[content_start_index:]
+            else:
+                if (subset_of_columns_to_use_options.mode ==
+                    SubsetOfColumnsToUseMode.set_of_column_names):
+                    column_ordering =\
+                     subset_of_columns_to_use_options.column_names
+                elif (subset_of_columns_to_use_options.mode ==
+                      SubsetOfColumnsToUseMode.top_n):
+                    column_ordering =\
+                     inp[content_start_index:
+                         content_start_index+SubsetOfColumnsToUseMode.top_n]
+                else:
+                    raise RuntimeError(
+                     "Unsupported subset_of_columns_to_use_options.mode: "
+                     +str(subset_of_columns_to_use_options.mode))
+                indices_lookup = dict((x,i) for (i,x) in enumerate(inp))
+                indices_to_care_about_wrapper.var = []
+                for label_to_use in column_ordering:
+                    indices_to_care_about_wrapper.var.append(
+                     indices_lookup[label_to_use])
+            return column_ordering
+        else:
+            #regular line processing
+            key = "_".join(inp[x] for x in key_columns)
+            #if we aren't skipping this row...
+            if (subset_of_rows_to_use_membership_dict is None
+                or (key in subset_of_rows_to_use_membership_dict)):
+                if (indices_to_care_about_wrapper.var is None):
+                    arr_to_add = [content_type(x) for x
+                                  in inp[content_start_index:]]
+                else:
+                    arr_to_add = [content_type(inp[x]) for x
+                                  in indices_to_care_about_wrapper.var]
+                return key, arr_to_add
+            return None #this is a row to skip
+    return titled_mapping_action
+
+
+def read_titled_mapping(file_handle,
+                      content_type=float,
+                      content_start_index=1,
+                      subset_of_columns_to_use_options=None,
+                      subset_of_rows_to_use=None,
+                      progress_update=None,
+                      key_columns=[0]):
+    """
+        returns an instance of util.TitledMapping.
+            util.TitledMapping has functions:
+                - get_titled_arr_for_key(key): returns an instance of
+                  TitledArr which has: get_col(col_name) and set_col(col_name)
+                - get_arr_for_key(key): returns the array for the key
+                - key_presence_check(key): throws an error if the key is absent
+                Is also iterable! Returns an iterator of TitledArr 
+        subset_of_columns_to_use_options:
+            instance of SubsetOfColumnsToUseOptions
+        subset_of_rows_to_use:
+            something that has a subset of row ids to be considered
+    """
+
+    titled_mapping_wrapper = util.VariableWrapper(None);
+    core_titled_mapping_action = get_core_titled_mapping_action(
+                    subset_of_columns_to_use_options=
+                        subset_of_columns_to_use_options,
+                    content_type=content_type,
+                    content_start_index=content_start_index,
+                    subset_of_rows_to_use=subset_of_rows_to_use,
+                    key_columns=key_columns)
+
+    def action(inp, line_number):
+        if (line_number==1): #handling of the title
+            column_ordering = core_titled_mapping_action(inp, line_number)
+            titled_mapping_wrapper.var = util.TitledMapping(column_ordering)
+        else:
+            key, arr_to_add = core_titled_mapping_action(inp, line_number)
+            if (arr_to_add is not None):
+                titled_mapping_wrapper.var.add_key(key, arr_to_add)
+
+    perform_action_on_each_line_of_file(
+        file_handle
+        ,transformation=default_tab_seppd
+        ,action=action)
+
+    return titled_mapping_wrapper.var 
