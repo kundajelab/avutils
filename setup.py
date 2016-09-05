@@ -9,7 +9,7 @@ config = {
     'version': '0.1',
     'packages': ['avutils'],
     'setup_requires': [],
-    'install_requires': [],
+    'install_requires': ['gzip', 're'],
     'scripts': [],
     'name': 'avutils'
 }

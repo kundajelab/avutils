@@ -22,7 +22,7 @@ def get_file_handle(filename,mode="r"):
 
 def default_tab_seppd(s):
     s = trim_newline(s)
-    s = split_by_delimiter(s)
+    s = split_by_delimiter(s, "\t")
     return s
 
 
@@ -55,27 +55,15 @@ def perform_action_on_each_line_of_file(
     file_handle
     #should be a function that accepts the
     #preprocessed/filtered line and the line number
-    , action=None 
+    , action
     , transformation=default_tab_seppd
     , ignore_input_title=False
     , progress_update=None
     , progress_update_file_name=None):
 
-    if (action_from_title is None and action is None):
-        raise ValueError("One of action_from_title or"
-                         +" action should not be None")
-    if (action_from_title is not None and action is not None):
-        raise ValueError("Only one of action_from_title or"
-                         +" action can be non-None")
-    if (action_from_title is not None and ignore_input_title == False):
-        raise ValueError("If action_from_title is not None,"
-                         +" ignore_input_title should probably be True"
-                         +" because it implies a title is present")
     i = 0;
     for line in file_handle:
         i += 1;
-        if (i == 1 and action_from_title is not None):
-            action = action_from_title(line)
         process_line(line, i, ignore_input_title,
                      transformation, action, progress_update)
         print_progress(progress_update, i, progress_update_file_name)
@@ -232,9 +220,9 @@ def get_core_titled_mapping_action(subset_of_columns_to_use_options,
                                    content_start_index,
                                    subset_of_rows_to_use=None,
                                    key_columns=[0]):
-    (subset_of_rows_to_use_membership_dict =
-        dict((x,1) for x in subset_of_rows_to_use)
-        if subset_of_rows_to_use is not None else None)
+    subset_of_rows_to_use_membership_dict =\
+        (dict((x,1) for x in subset_of_rows_to_use)
+         if subset_of_rows_to_use is not None else None)
     indices_to_care_about_wrapper = util.VariableWrapper(None)
     def titled_mapping_action(inp, line_number):
         if (line_number==1): #handling of the title
@@ -322,3 +310,54 @@ def read_titled_mapping(file_handle,
         ,action=action)
 
     return titled_mapping_wrapper.var 
+
+
+class FastaIterator(object):
+    """
+        Returns an iterator over lines of a fasta file - assumes each sequence
+        spans only one line!
+    """
+    def __init__(self, file_handle, progress_update=None,
+                       progress_update_file_name=None):
+        self.file_handle = file_handle
+        self.progress_update = progress_update
+        self.progress_update_file_name = progress_update_file_name
+        self.line_count = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        self.line_count += 1
+        print_progress(self.progress_update,
+                       self.line_count,
+                       self.progress_update_file_name)
+        #should raise StopIteration if at end of lines
+        key_line = trim_newline(self.file_handle.next())
+        sequence = trim_newline(self.file_handle.next())
+        if (key_line.startswith(">")==False):
+            raise RuntimeError("Expecting a record name line that begins "
+                               +"with > but got "+str(key_line))
+        key = key_line.lstrip(">")
+        return key, sequence
+
+
+class Hdf5BufferedDatasetWriter(object):
+
+    def __init__(self, dataset, buffer_size=10000):
+        self.dataset = dataset
+        self.written_so_far = 0 
+        self.the_buffer = []
+        self.buffer_size = buffer_size
+
+    def write(self, entry):
+        self.the_buffer.append(entry)
+        if (len(self.the_buffer) == self.buffer_size):
+            self.flush()
+
+    def flush(self):
+        self.dataset[self.written_so_far:
+                     (self.written_so_far+len(self.the_buffer))] =\
+                     self.the_buffer
+        self.written_so_far += len(self.the_buffer)
+        self.the_buffer = []
