@@ -20,7 +20,7 @@ class DefaultOrderedDictWrapper(object):
 
 
 def seq_to_2d_image(sequence):
-    to_return = np.zeros((1,4,len(sequence)))
+    to_return = np.zeros((1,4,len(sequence)), dtype=np.int8)
     seq_to_2d_image_fill_in_array(to_return[0], sequence)
     return to_return
 
