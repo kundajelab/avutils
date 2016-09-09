@@ -1,4 +1,5 @@
 import sys, os
+import os.path
 from collections import OrderedDict
 import numpy as np
 import random
@@ -130,6 +131,16 @@ def get_file_name_parts(file_name):
     p = re.compile(r"^(.*/)?([^\./]+)(\.[^/]*)?$")
     m = p.search(file_name)
     return FileNameParts(m.group(1), m.group(2), m.group(3))
+
+
+def load_yaml_if_string(yaml_stuff):
+    if (isinstance(yaml_stuff, str)):
+        yaml_stuff = yaml.load(fp.get_file_handle(yaml_stuff))
+    return yaml_stuff
+
+
+def file_exists(file_path):
+    return os.path.isfile(file_path)
 
 
 class FileNameParts(object):
