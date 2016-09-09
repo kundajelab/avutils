@@ -1,5 +1,51 @@
+import sys, os
 from collections import OrderedDict
-import numpy as np;
+import numpy as np
+import random
+import json
+import re
+
+class GetBest(object):
+    def __init__(self):
+        self.best_object = None
+        self.best_val = None
+
+    def process(self, the_object, val):
+        replace = self.best_object==None or self.is_better(val)
+        if (replace):
+            self.best_object = the_object
+            self.best_val = val 
+        return replace
+
+    def is_better(self, val):
+        raise NotImplementedError()
+
+    def get_best(self):
+        return self.best_object, self.best_val
+
+    def get_best_val(self):
+        return self.best_val
+
+    def get_best_obj(self):
+        return self.best_object
+
+
+class GetBestMax(GetBest):
+    def is_better(self, val):
+        return val > self.bestVal
+
+
+class GetBestMin(GetBest):
+    def is_better(self, val):
+        return val < self.bestVal
+
+
+def init_get_best(larger_is_better):
+    if (larger_is_better):
+        return GetBestMax()
+    else:
+        return GetBestMin()
+
 
 class VariableWrapper():
     """ For when I want reference-type access to an immutable"""
@@ -64,3 +110,51 @@ def combine_enums(*enums):
     for an_enum in enums:
         new_enum_dict.update(an_enum.the_dict)
     return enum(**new_enum_dict)
+
+
+def get_random_string(size):
+    import string
+    return ''.join(random.choice(
+                   string.ascii_letters+string.digits) for _ in range(size))
+
+
+def format_as_json(jsonable_data):
+    return json.dumps(jsonable_data, indent=4, separators=(',', ': '))
+
+
+def get_core_file_name(file_name):
+    return get_file_name_parts(file_name).core_file_name
+
+
+def get_file_name_parts(file_name):
+    p = re.compile(r"^(.*/)?([^\./]+)(\.[^/]*)?$")
+    m = p.search(file_name)
+    return FileNameParts(m.group(1), m.group(2), m.group(3))
+
+
+class FileNameParts(object):
+
+    def __init__(self, directory, core_file_name, extension):
+        self.directory = directory if (directory is not None) else os.getcwd()
+        self.core_file_name = core_file_name
+        self.extension = extension
+
+    def get_full_path(self):
+        return self.directory+"/"+self.file_name
+
+    def get_core_file_name_and_extension(self):
+        return self.core_file_name+self.extension
+
+    def get_transformed_core_file_name(self, transformation, extension=None):
+        to_return = self.get_transformed_core_file_name(transformation)
+        if (extension is not None):
+            to_return = to_return + extension
+        else:
+            if (self.extension is not None):
+                to_return = to_return + self.extension
+        return to_return
+
+    def get_transformed_file_path(self, transformation, extension=None):
+        return (self.directory+"/"+
+                self.get_transformed_core_file_name(transformation,
+                                                    extension=extension))

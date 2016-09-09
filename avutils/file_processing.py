@@ -2,6 +2,8 @@ import re
 import os
 import os.path
 import gzip
+import shutil
+import time
 from . import error_messages
 from . import util
 
@@ -361,3 +363,79 @@ class Hdf5BufferedDatasetWriter(object):
                      self.the_buffer
         self.written_so_far += len(self.the_buffer)
         self.the_buffer = []
+
+
+def write_to_file(output_file, contents):
+    output_file_handle = get_file_handle(output_file, 'w')
+    write_to_file_handle(output_file_handle, contents)
+
+
+def write_to_file_handle(output_file_handle, contents):
+    output_file_handle.write(contents)
+    output_file_handle.close()
+
+
+def rename_files(tuples_for_renaming):
+    for old_file, new_file in tuples_for_renaming:
+        shutil.move(old_file, new_file) 
+
+
+class FileLockAsDir(object):
+    #hacking unix directories to create v. lightweight
+    #locking mechanism for reading from files.
+    #I need this for when my different threads may
+    #not be able to communicate with each other
+    #and have no knowledge of each other.
+    #...and I really don't want to spin up a db server.
+    def __init__(self, file_name, sleep_seconds=5, max_tries=5):
+
+        self.lock_dir_name = (
+            util.get_file_name_parts(file_name)\
+            .get_transformed_file_path(
+                transformation=lambda x: "lockdir_"+x, extension=""))
+        lock_acquired = False
+        tries = 0
+
+        while (lock_acquired==False):
+            print("Trying for",self.lock_dir_name)
+            try:
+                os.mkdir(self.lock_dir_name)
+                lock_acquired = True
+            except OSError as e:
+                tries += 1
+                if (tries==maxTries):
+                    print("Tried and failed acquiring",
+                          self.lock_dir_name, tries, "times")
+                    print("Forcibly taking")
+                    os.rmdir(self.lock_dir_name)
+                time.sleep(sleep_seconds)
+
+    def release(self):
+        os.rmdir(self.lock_dir_name)
+        print(self.lock_dir_name, "released") 
+
+
+class BackupForWriteFileHandle(object):
+    def __init__(self, file_name):
+        """
+        Wrapper around a filehandle that
+            backs up the file while writing,
+            then deletes the backup when close
+            is called
+        """
+        self.file_name = file_name
+        self.backup_file_name = file_name+".backup"
+        os.system("cp "+self.file_name+" "+self.backup_file_name)
+        self.output_file_handle = get_file_handle(self.file_name,'w')
+
+    def write(self, *args, **kwargs):
+        self.output_file_handle.write(*args, **kwargs)
+
+    def close(self):
+        self.output_file_handle.close()
+        os.system("rm "+self.backup_file_name)
+
+    def restore(self):
+        os.system("cp "+self.backup_file_name+" "+self.file_name)
+        os.system("rm "+self.backup_file_name)
+        self.output_file_handle.close()
