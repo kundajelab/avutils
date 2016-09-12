@@ -4,6 +4,7 @@ import os.path
 import gzip
 import shutil
 import time
+import yaml
 from . import error_messages
 from . import util
 
@@ -378,6 +379,12 @@ def write_to_file_handle(output_file_handle, contents):
 def rename_files(tuples_for_renaming):
     for old_file, new_file in tuples_for_renaming:
         shutil.move(old_file, new_file) 
+
+
+def load_yaml_if_string(yaml_stuff):
+    if (isinstance(yaml_stuff, str)):
+        yaml_stuff = yaml.load(get_file_handle(yaml_stuff))
+    return yaml_stuff
 
 
 class FileLockAsDir(object):

@@ -133,14 +133,17 @@ def get_file_name_parts(file_name):
     return FileNameParts(m.group(1), m.group(2), m.group(3))
 
 
-def load_yaml_if_string(yaml_stuff):
-    if (isinstance(yaml_stuff, str)):
-        yaml_stuff = yaml.load(fp.get_file_handle(yaml_stuff))
-    return yaml_stuff
-
-
 def file_exists(file_path):
     return os.path.isfile(file_path)
+
+
+def dir_exists(dir_path):
+    return os.path.isdir(dir_path)
+
+
+def create_dir_if_not_exists(dir_path):
+    if (dir_exists(dir_path)==False):
+        os.mkdirs(dir_path) 
 
 
 class FileNameParts(object):
