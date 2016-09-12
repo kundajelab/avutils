@@ -160,7 +160,7 @@ class FileNameParts(object):
         return self.core_file_name+self.extension
 
     def get_transformed_core_file_name(self, transformation, extension=None):
-        to_return = self.get_transformed_core_file_name(transformation)
+        to_return = transformation(self.core_file_name)
         if (extension is not None):
             to_return = to_return + extension
         else:
