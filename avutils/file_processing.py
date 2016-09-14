@@ -404,15 +404,15 @@ class FileLockAsDir(object):
         tries = 0
 
         while (lock_acquired==False):
-            print("Trying for",self.lock_dir_name)
+            print("Trying for "+self.lock_dir_name)
             try:
                 os.mkdir(self.lock_dir_name)
                 lock_acquired = True
             except OSError as e:
                 tries += 1
-                if (tries==maxTries):
-                    print("Tried and failed acquiring",
-                          self.lock_dir_name, tries, "times")
+                if (tries==max_tries):
+                    print("Tried and failed acquiring"+
+                          self.lock_dir_name+" "+str(tries)+"times")
                     print("Forcibly taking")
                     os.rmdir(self.lock_dir_name)
                 time.sleep(sleep_seconds)
@@ -432,7 +432,8 @@ class BackupForWriteFileHandle(object):
         """
         self.file_name = file_name
         self.backup_file_name = file_name+".backup"
-        os.system("cp "+self.file_name+" "+self.backup_file_name)
+        if util.file_exists(self.file_name): 
+            os.system("cp "+self.file_name+" "+self.backup_file_name)
         self.output_file_handle = get_file_handle(self.file_name,'w')
 
     def write(self, *args, **kwargs):
@@ -440,7 +441,8 @@ class BackupForWriteFileHandle(object):
 
     def close(self):
         self.output_file_handle.close()
-        os.system("rm "+self.backup_file_name)
+        if (util.file_exists(self.backup_file_name)):
+            os.system("rm "+self.backup_file_name)
 
     def restore(self):
         os.system("cp "+self.backup_file_name+" "+self.file_name)

@@ -6,7 +6,7 @@ class DynamicEnum(object):
         accessible using the object attribute syntax rather
         than the dictionary syntax.
     """
-    def __init__(self, *keys):
+    def __init__(self):
         self._vals_dict = OrderedDict()
 
     def add_key(self, key_name, val):
@@ -53,6 +53,7 @@ class Keys(object):
         #purpose of accessing the keys using the object
         #attribute syntax rather than the dictionary syntax.
         self.keys = DynamicEnum() 
+        self.k = self.keys
         self.keys_defaults = DynamicEnum()
         for key in keys:
             self.add_key(key.key_name_internal, key.key_name_external,
@@ -63,6 +64,9 @@ class Keys(object):
         self.keys.add_key(key_name_internal, key_name_external)
         if (default_value != UNDEF):
             self.keys_defaults.add_key(key_name_internal, default_value)
+
+    def get_keys(self):
+        return self.k.get_keys()
 
     def check_for_unsupported_keys(self, a_dict):
         for a_key in a_dict:

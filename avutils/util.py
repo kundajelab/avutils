@@ -33,12 +33,12 @@ class GetBest(object):
 
 class GetBestMax(GetBest):
     def is_better(self, val):
-        return val > self.bestVal
+        return val > self.best_val
 
 
 class GetBestMin(GetBest):
     def is_better(self, val):
-        return val < self.bestVal
+        return val < self.best_val
 
 
 def init_get_best(larger_is_better):
@@ -143,7 +143,7 @@ def dir_exists(dir_path):
 
 def create_dir_if_not_exists(dir_path):
     if (dir_exists(dir_path)==False):
-        os.mkdirs(dir_path) 
+        os.makedirs(dir_path) 
 
 
 class FileNameParts(object):
