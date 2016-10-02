@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from avutils import file_processing as fp
+from avutils import util
+
+def shuffle_corresponding_lines(options):
+    arrays_of_lines = fp.read_rows_into_arr(
+        fp.get_file_handle(file_name) for file_name in options.file_names)
+     
+
+if __name__ == "__main__":
+    import argparse;
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file_names", nargs="+") 
+    options = parser.parse_args()
+    shuffle_corresponding_lines(options)

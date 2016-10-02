@@ -74,6 +74,13 @@ def perform_action_on_each_line_of_file(
     file_handle.close();
 
 
+def read_rows_into_arr(file_handle):
+    if isinstance(file_handle, str):
+        file_handle = get_file_handle(file_handle) 
+    rows = [line for line in file_handle]
+    return rows 
+
+
 def read_col_into_arr(file_handle, col=0, title_present=False):
     arr = [];
     def action(inp, line_number):
@@ -84,7 +91,7 @@ def read_col_into_arr(file_handle, col=0, title_present=False):
         , action=action
         , ignore_input_title=title_present
     );
-    return arr;
+    return arr
 
 
 def write_matrix_to_file(file_handle, rows, col_names=None, row_names=None):
