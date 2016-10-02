@@ -51,7 +51,7 @@ def init_get_best(larger_is_better):
 class VariableWrapper():
     """ For when I want reference-type access to an immutable"""
     def __init__(self, var):
-        self.var = var;   
+        self.var = var   
 
 
 class DefaultOrderedDictWrapper(object):
@@ -172,3 +172,32 @@ class FileNameParts(object):
         return (self.directory+"/"+
                 self.get_transformed_core_file_name(transformation,
                                                     extension=extension))
+
+
+#randomly shuffles the input arrays (correspondingly)
+#mutates arrs!
+def shuffle_arrays(arrs, copy_on_shuffle):
+    if len(arrs) == 0:
+        raise ValueError("should supply at least one input array")
+    len_of_arrs = len(arrs[0])
+    #sanity check that all lengths are equal
+    for arr in arrs:
+        if (len(arr) != len_of_arrs):
+            raise ValueError("First supplied array had length "
+                             +str(len_of_arrs)
+                             +" but a subsequent array had length "
+                             +str(len(arr)))
+    for i in xrange(0,len_of_arrs):
+        #randomly select index:
+        chosen_index = random.randint(i,len_of_arrs-1)
+        for arr in arrs:
+            #swap
+            if (copy_on_shuffle):
+                val_at_index = np.copy(arr[chosen_index])
+                arr[chosen_index] = np.copy(arr[i])
+                arr[i] = val_at_index
+            else:
+                val_at_index = arr[chosen_index]
+                arr[chosen_index] = arr[i]
+                arr[i] = val_at_index
+    return arrs
