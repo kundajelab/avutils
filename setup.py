@@ -10,7 +10,7 @@ config = {
     'packages': ['avutils'],
     'setup_requires': [],
     'install_requires': [], #gzip, re...blah
-    'scripts': [],
+    'scripts': ["scripts/shuffle_corresponding_lines"],
     'name': 'avutils'
 }
 
