@@ -174,6 +174,7 @@ class FileNameParts(object):
                                                     extension=extension))
 
 
+<<<<<<< HEAD
 #randomly shuffles the input arrays (correspondingly)
 #mutates arrs!
 def shuffle_arrays(arrs, copy_on_shuffle):
@@ -201,3 +202,19 @@ def shuffle_arrays(arrs, copy_on_shuffle):
                 arr[chosen_index] = arr[i]
                 arr[i] = val_at_index
     return arrs
+
+
+def send_email(subject, to_addresses,
+               sender, #eg: "avutils-mail-sender@stanford.edu",
+               smtp_server, #eg: "smtp.stanford.edu",
+               contents=""):
+    from email.mime.text import MIMEText
+    msg = MIMEText(contents)
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = ",".join(to_addresses)
+
+    s = smtplib.SMTP(smtp_server)
+    s.starttls();
+    s.sendmail(sender, to, msg.as_string())
+    s.quit()
