@@ -77,7 +77,7 @@ def perform_action_on_each_line_of_file(
 def read_rows_into_arr(file_handle):
     if isinstance(file_handle, str):
         file_handle = get_file_handle(file_handle) 
-    rows = [line for line in file_handle]
+    rows = [trim_newline(line) for line in file_handle]
     return rows 
 
 
