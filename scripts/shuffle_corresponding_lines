@@ -15,7 +15,7 @@ def shuffle_corresponding_lines(options):
         shuffled_file_name = util.get_file_name_parts(file_name)\
                                 .get_transformed_file_path(
                                   transformation=lambda x: "shuffled_"+x)
-        fp.write_to_file(shuffled_file_name, "".join(shuffled_array)) 
+        fp.write_to_file(shuffled_file_name, "\n".join(shuffled_array)) 
      
 
 if __name__ == "__main__":
