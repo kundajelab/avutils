@@ -7,4 +7,5 @@ avutils.egg-info/PKG-INFO
 avutils.egg-info/SOURCES.txt
 avutils.egg-info/dependency_links.txt
 avutils.egg-info/top_level.txt
+scripts/make_hdf5
 scripts/shuffle_corresponding_lines
