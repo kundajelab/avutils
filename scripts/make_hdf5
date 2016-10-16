@@ -5,7 +5,6 @@ from __future__ import absolute_import
 import sys
 import os
 import yaml
-import momma_dragonn
 from avutils import file_processing as fp
 from avutils.yaml_data_import import import_data
 
