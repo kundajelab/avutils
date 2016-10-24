@@ -60,7 +60,7 @@ LabelsKeys = Keys(Key("file_name"),
                   Key("file_with_subset_of_label_names", default=None),
                   Key("output_mode_name", default=DefaultModeNames.labels),
                   Key("progress_update", default=None),
-		  Key("key_columns", default=[0]))
+		          Key("key_columns", default=[0]))
 
 ###
 #Weight Keys

@@ -9,7 +9,13 @@ from avutils import util
 def shuffle_corresponding_lines(options):
     arrays_of_lines = [fp.read_rows_into_arr(
         fp.get_file_handle(file_name)) for file_name in options.file_names]
-    shuffled_arrays = util.shuffle_arrays(arrays_of_lines,
+    if (options.ignore_title):
+        titles = [[x[0]] for x in arrays_of_lines]
+        shuffled_arrays = util.shuffle_arrays(
+            [x[1:] for x in arrays_of_lines], copy_on_shuffle=False)
+        shuffled_arrays = [x+y for x,y in zip(titles, shuffled_arrays)]
+    else:
+        shuffled_arrays = util.shuffle_arrays(arrays_of_lines,
                                            copy_on_shuffle=False)
     for shuffled_array, file_name in zip(shuffled_arrays, options.file_names):
         shuffled_file_name = util.get_file_name_parts(file_name)\
@@ -22,5 +28,6 @@ if __name__ == "__main__":
     import argparse;
     parser = argparse.ArgumentParser("Shuffle lines of files correspondingly")
     parser.add_argument("file_names", nargs="+") 
+    parser.add_argument("--ignore_title", action="store_true") 
     options = parser.parse_args()
     shuffle_corresponding_lines(options)
