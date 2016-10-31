@@ -66,6 +66,10 @@ class DefaultOrderedDictWrapper(object):
         return self.ordered_dict[key]
 
 
+def one_hot_encode_sequences(sequences):
+    return np.array([seq_to_2d_image(seq) for seq in sequences])
+
+
 def seq_to_2d_image(sequence):
     to_return = np.zeros((1,4,len(sequence)), dtype=np.int8)
     seq_to_2d_image_fill_in_array(to_return[0], sequence)
