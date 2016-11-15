@@ -7,6 +7,11 @@ from avutils import util
 
 
 def shuffle_corresponding_lines(options):
+    import numpy as np
+    import random
+    np.random.seed(options.seed)
+    random.seed(options.seed)
+
     arrays_of_lines = [fp.read_rows_into_arr(
         fp.get_file_handle(file_name)) for file_name in options.file_names]
     if (options.ignore_title):
@@ -29,5 +34,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Shuffle lines of files correspondingly")
     parser.add_argument("file_names", nargs="+") 
     parser.add_argument("--ignore_title", action="store_true") 
+    parser.add_argument("--seed", type=int, default=1234) 
     options = parser.parse_args()
     shuffle_corresponding_lines(options)
