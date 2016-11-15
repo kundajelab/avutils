@@ -2,7 +2,7 @@ from collections import defaultdict
 from random import shuffle
 
 
-#document the dinucleotide edges
+#compile the dinucleotide edges
 def prepare_edges(s):
     edges = defaultdict(list) 
     for i in xrange(len(s)-1):

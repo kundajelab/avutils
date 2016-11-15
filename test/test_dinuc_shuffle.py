@@ -6,8 +6,8 @@ import random
 
 def dinuc_count(seq):
     count = defaultdict(lambda: 0) 
-    for i in range(len(seq)-1):
-        count[seq[i:i+1]] += 1
+    for i in range(len(seq)-2):
+        count[seq[i:i+2]] += 1
     return count
 
 class TestDinucShuffle(unittest.TestCase):
