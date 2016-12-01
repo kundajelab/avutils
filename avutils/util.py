@@ -221,3 +221,15 @@ def send_email(subject, to_addresses,
     s.starttls();
     s.sendmail(sender, to, msg.as_string())
     s.quit()
+
+
+def chain_functions(*functions):
+    if (len(functions) < 2):
+        raise ValueError("input to chain_functions should "
+                          "have at least two arguments")
+    def chained_functions(x):
+        x = functions[0](x)
+        for function in functions[1:]:
+            x = function(x)
+        return x;
+    return chainedFunctions
