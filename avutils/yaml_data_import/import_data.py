@@ -44,12 +44,14 @@ SubsetOfColumnsToUseOptionsYamlKeys = Keys(
 ###
 #options for FeaturesFormat
 ###
-FeaturesFormat = av_util.enum(rowsAndColumns='rowsAndColumns'
-                         , fasta='fasta')
+FeaturesFormat = av_util.enum(rowsAndColumns='rowsAndColumns', fasta='fasta')
 #For files that have the format produced by getfasta bedtools;
 #>key \n [fasta sequence] \n ...
+OneHotFormats = av_util.enum(_1d="1d", theano_one_hot_row="theano_one_hot_row")
 FeaturesFormatOptions_Fasta = Keys(Key("file_names"),
-                                   Key("progress_update", default=None))
+                                   Key("progress_update", default=None),
+                                   Key("one_hot_format",
+                                       default=OneHotFormats._1d))
 
 
 ###
@@ -66,7 +68,7 @@ LabelsKeys = Keys(Key("file_name"),
 #Weight Keys
 ###
 WeightsKeys=Keys(Key("weights"), Key("output_mode_name",
-                                     default=DefaultModeNames.labels)) 
+                 default=DefaultModeNames.labels)) 
 
 ###
 #Split keys
@@ -360,7 +362,14 @@ def fasta_iterator(features_opts):
                           file_handle=fp.get_file_handle(file_name),
                           progress_update=progress_update)
         for seq_id, seq in fasta_iterator:
-            yield seq_id, av_util.seq_to_2d_image(seq) 
+            one_hot_format = features_opts[KeysObj.keys.one_hot_format]
+            if (one_hot_format==OneHotFormats._1d):
+                yield seq_id, av_util.seq_to_one_hot(seq) 
+            elif (one_hot_format==OneHotFormats.theano_one_hot_row):
+                yield seq_id, av_util.theano_seq_to_2d_image(seq)
+            else:
+                raise RuntimeError("Unsupported one_hot_format: "
+    +one_hot_format+"; supported formats are: "+OneHotFormats.vals)
 
 
 def process_labels_with_labels_action(labels_objects,

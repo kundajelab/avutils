@@ -6,6 +6,7 @@ import random
 import json
 import re
 
+
 class GetBest(object):
     def __init__(self):
         self.best_object = None
@@ -70,14 +71,28 @@ def one_hot_encode_sequences(sequences):
     return np.array([seq_to_2d_image(seq) for seq in sequences])
 
 
-def seq_to_2d_image(sequence):
+def theano_seq_to_2d_image(sequence):
+    #theano dim ordering, uses row axis for one-hot
     to_return = np.zeros((1,4,len(sequence)), dtype=np.int8)
-    seq_to_2d_image_fill_in_array(to_return[0], sequence)
+    seq_to_one_hot_fill_in_array(zeros_array=to_return[0],
+                                 sequence=sequence, one_hot_axis=0)
+    return to_return
+
+
+def seq_to_one_hot(sequence): 
+    #assumes 1d and tensorflow dim ordering
+    to_return = np.zeros((len(sequence),4), dtype=np.int8)
+    seq_to_one_hot_fill_in_array(to_return, sequence, one_hot_axis=1)
     return to_return
 
 
 # Letter as 1, other letters as 0
-def seq_to_2d_image_fill_in_array(zeros_array, sequence):
+def seq_to_one_hot_fill_in_array(zeros_array, sequence, one_hot_axis):
+    assert one_hot_axis==0 or one_hot_axis==1
+    if (one_hot_axis==0):
+        assert zeros_array.shape[1] == len(sequence)
+    elif (one_hot_axis==1): 
+        assert zeros_array.shape[0] == len(sequence)
     #zeros_array should be an array of dim 4xlen(sequence), filled with zeros.
     #will mutate zeros_array
     for (i,char) in enumerate(sequence):
@@ -93,7 +108,10 @@ def seq_to_2d_image_fill_in_array(zeros_array, sequence):
             continue #leave that pos as all 0's
         else:
             raise RuntimeError("Unsupported character: "+str(char))
-        zeros_array[char_idx,i] = 1
+        if (one_hot_axis==0):
+            zeros_array[char_idx,i] = 1
+        elif (one_hot_axis==1):
+            zeros_array[i,char_idx] = 1
 
 
 def enum(**enums):
