@@ -79,6 +79,11 @@ def theano_seq_to_2d_image(sequence):
     return to_return
 
 
+def seq_to_2d_image(sequence, dim_ordering='th'):
+    assert dim_ordering=='th', "tensorflow ordering not implemented yet"
+    return theano_seq_to_2d_image(sequence)
+
+
 def seq_to_one_hot(sequence): 
     #assumes 1d and tensorflow dim ordering
     to_return = np.zeros((len(sequence),4), dtype=np.int8)
