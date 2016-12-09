@@ -50,8 +50,7 @@ FeaturesFormat = av_util.enum(rowsAndColumns='rowsAndColumns', fasta='fasta')
 OneHotFormats = av_util.enum(_1d="1d", theano_one_hot_row="theano_one_hot_row")
 FeaturesFormatOptions_Fasta = Keys(Key("file_names"),
                                    Key("progress_update", default=None),
-                                   Key("one_hot_format",
-                                       default=OneHotFormats._1d))
+                                   Key("one_hot_format"))
 
 
 ###
@@ -369,7 +368,7 @@ def fasta_iterator(features_opts):
                 yield seq_id, av_util.theano_seq_to_2d_image(seq)
             else:
                 raise RuntimeError("Unsupported one_hot_format: "
-    +one_hot_format+"; supported formats are: "+OneHotFormats.vals)
+    +one_hot_format+"; supported formats are: "+str(OneHotFormats.vals))
 
 
 def process_labels_with_labels_action(labels_objects,
