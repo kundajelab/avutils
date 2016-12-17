@@ -7,7 +7,7 @@ config = {
     'url': 'NA',
     'download_url': 'https://github.com/kundajelab/avutils',
     'version': '0.1',
-    'packages': ['avutils'],
+    'packages': ['avutils', 'avutils.yaml_data_import'],
     'setup_requires': [],
     'install_requires': [], #gzip, re...blah
     'scripts': ["scripts/make_hdf5", "scripts/shuffle_corresponding_lines"],
