@@ -235,6 +235,7 @@ def send_email(subject, to_addresses,
                smtp_server, #eg: "smtp.stanford.edu",
                contents=""):
     from email.mime.text import MIMEText
+    import smtplib
     msg = MIMEText(contents)
     msg['Subject'] = subject
     msg['From'] = sender
@@ -242,7 +243,7 @@ def send_email(subject, to_addresses,
 
     s = smtplib.SMTP(smtp_server)
     s.starttls();
-    s.sendmail(sender, to, msg.as_string())
+    s.sendmail(sender, to_addresses, msg.as_string())
     s.quit()
 
 

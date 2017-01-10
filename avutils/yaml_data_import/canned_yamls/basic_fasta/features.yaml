@@ -4,6 +4,7 @@
         ,"opts": {
             "file_names": ["inputs.gz"]
             ,"progress_update": 5000
+            ,"one_hot_format": "1d"
         },
         "input_mode_name": "sequence" 
     }
