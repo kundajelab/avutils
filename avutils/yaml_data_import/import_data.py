@@ -23,15 +23,13 @@ RootKeys=Keys(Key("features"), Key("labels"), Key("splits"), Key("weights"))
 ###
 #Features Keys
 ###
-FeaturesFormat=av_util.enum(rows_and_columns='rows_and_columns'
-                         , fasta='fasta')
 DefaultModeNames = av_util.enum(labels="default_output_mode_name",
                              features="default_input_mode_name")
 FeaturesKeys = Keys(Key("features_format")
                     , Key("opts")
                     , Key("input_mode_name",
                     default=DefaultModeNames.features))
-FeatureSetYamlKeys_RowsAndCols = Keys(
+FeatureSetYamlKeys_Columns = Keys(
     Key("file_names")
     ,Key("content_type",default=ContentTypes.floating.name)
     ,Key("content_start_index",default=1)
@@ -44,14 +42,16 @@ SubsetOfColumnsToUseOptionsYamlKeys = Keys(
 ###
 #options for FeaturesFormat
 ###
-FeaturesFormat = av_util.enum(rowsAndColumns='rowsAndColumns', fasta='fasta')
+FeaturesFormat=av_util.enum(columns='columns', fasta='fasta')
 #For files that have the format produced by getfasta bedtools;
 #>key \n [fasta sequence] \n ...
 OneHotFormats = av_util.enum(_1d="1d", theano_one_hot_row="theano_one_hot_row")
 FeaturesFormatOptions_Fasta = Keys(Key("file_names"),
                                    Key("progress_update", default=None),
                                    Key("one_hot_format"))
-
+FeaturesFormatOptions_Columns = Keys(
+    Key("file_names"),
+    Key("progress_update", default=None))
 
 ###
 #Label keys
@@ -346,6 +346,8 @@ def process_features_with_features_action(features_objects,
 def get_features_iterator(features_format, features_opts):
     if features_format==FeaturesFormat.fasta:
         return fasta_iterator(features_opts)
+    elif features_format==FeaturesFormat.columns:
+        return columns_iterator(features_opts)
     else:
         raise RuntimeError("Unsupported features format: "+features_format)
 
@@ -370,6 +372,21 @@ def fasta_iterator(features_opts):
                 raise RuntimeError("Unsupported one_hot_format: "
     +one_hot_format+"; supported formats are: "+str(OneHotFormats.vals))
 
+
+def columns_iterator(features_opts):
+    KeysObj = FeaturesFormatOptions_Columns 
+    KeysObj.check_for_unsupported_keys_and_fill_in_defaults(features_opts)
+    file_names = features_opts[KeysObj.keys.file_names]
+    progress_update = features_opts[KeysObj.keys.progress_update]
+    for file_name in file_names:
+        print("on file",file_name)
+        for line_number, line in enumerate(fp.get_file_handle(file_name)):
+            if (line_number > 0):
+                inp = fp.default_tab_seppd(line) 
+                inp_id = inp[0]
+                inp_vals = [float(x) for x in inp[1:]]
+                yield inp_id, np.array(inp_vals)
+ 
 
 def process_labels_with_labels_action(labels_objects,
                                       labels_action,
