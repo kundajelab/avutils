@@ -284,12 +284,20 @@ def process_combined_yamls(combined_yamls, split_compiler_factory):
             split_compiler_factory(split_name=split_name,
                                     ids_in_split=split_to_ids[split_name]) 
 
+    labels_warned_about_missing_ids = av_util.VariableWrapper(False)
     #define the action that will get applied to new labels
     def labels_action(output_mode, the_id, labels): 
-        split_names = id_to_split_names[the_id]
-        for split_name in split_names:
-            split_name_to_compiler[split_name].add_labels(
-                the_id=the_id, output_mode=output_mode, labels=labels)
+        if (the_id in id_to_split_names):
+            split_names = id_to_split_names[the_id]
+            for split_name in split_names:
+                split_name_to_compiler[split_name].add_labels(
+                    the_id=the_id, output_mode=output_mode, labels=labels)
+        else:
+            if (labels_warned_about_missing_ids.var == False):
+                print("Warning - id "+str(the_id)
+                      +" in labels not found in any splits. "
+                      "This is the only time such a warning will be printed")
+                labels_warned_about_missing_ids.var = True
 
     def set_label_names_action(output_mode, label_names):
         for split_name in split_to_ids: 
@@ -301,24 +309,40 @@ def process_combined_yamls(combined_yamls, split_compiler_factory):
         labels_action=labels_action,
         set_label_names_action=set_label_names_action)
 
+    features_warned_about_missing_ids = av_util.VariableWrapper(False)
     #define the action that will get applied to new features
     def features_action(input_mode, the_id, features):
-        split_names = id_to_split_names[the_id]
-        for split_name in split_names:
-            split_name_to_compiler[split_name].add_features(
-                the_id=the_id, input_mode=input_mode, features=features)
+        if (the_id in id_to_split_names):
+            split_names = id_to_split_names[the_id]
+            for split_name in split_names:
+                split_name_to_compiler[split_name].add_features(
+                    the_id=the_id, input_mode=input_mode, features=features)
+        else:
+            if (features_warned_about_missing_ids.var == False):
+                print("Warning - id "+str(the_id)
+                      +" in features not found in any splits. "
+                      "This is the only time such a warning will be printed")
+                features_warned_about_missing_ids.var = True
 
     process_features_with_features_action(
         features_objects=combined_yamls[RootKeys.keys.features],
         features_action=features_action)
 
+    weights_warned_about_missing_ids = av_util.VariableWrapper(False)
     #define the action that will be applied to new weights
     def weights_action(output_mode, the_id, weights):
-        split_names = id_to_split_names[the_id]
-        for split_name in split_names:
-            split_name_to_compiler[split_name].add_weights(
-                the_id=the_id, weights=weights, output_mode=output_mode)
-    #TODO: implement weights action
+        if (the_id in id_to_split_names):
+            split_names = id_to_split_names[the_id]
+            for split_name in split_names:
+                split_name_to_compiler[split_name].add_weights(
+                    the_id=the_id, weights=weights, output_mode=output_mode)
+        else:
+            if (weights_warned_about_missing_ids.var == False):
+                print("Warning - id "+str(the_id)
+                      +" in weights not found in any splits. "
+                      "This is the only time such a warning will be printed")
+                weights_warned_about_missing_ids.var = True
+    #TODO: implement processing of weights with weights action
   
     for compiler in split_name_to_compiler.values():
         compiler.finalize() 
