@@ -4,7 +4,15 @@ import os.path
 import gzip
 import shutil
 import time
+from collections import OrderedDict
 import yaml
+#configure the yaml package to use OrderedDict
+from yaml.resolver import BaseResolver
+yaml.add_representer(
+    OrderedDict,
+    lambda representer, data: representer.represent_dict(data.iteritems()))
+yaml.add_constructor(BaseResolver.DEFAULT_MAPPING_TAG,
+    lambda constructor, node: OrderedDict(constructor.construct_pairs(node)))
 from . import error_messages
 from . import util
 
