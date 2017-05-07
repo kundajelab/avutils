@@ -1,3 +1,4 @@
+from __future__ import print_function
 import re
 import os
 import os.path
@@ -58,7 +59,7 @@ def process_line(line, i, ignore_input_title,
 def print_progress(progress_update, i, file_name=None):
     if progress_update is not None:
         if (i%progress_update == 0):
-            print ("Processed "+str(i)+" lines"
+            print("Processed "+str(i)+" lines"
                    +str("" if file_name is None else " of "+file_name))
 
 
