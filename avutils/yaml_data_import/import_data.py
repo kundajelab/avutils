@@ -309,10 +309,23 @@ def process_combined_yamls(combined_yamls, split_compiler_factory):
         labels_objects=combined_yamls[RootKeys.keys.labels],
         labels_action=labels_action,
         set_label_names_action=set_label_names_action)
-
+    
     features_warned_about_missing_ids = av_util.VariableWrapper(False)
+    # make sure all the sequences match in length by comparing to the first feature
+    feature_length = av_util.VariableWrapper(-1)
+    features_warned_about_varying_lengths = av_util.VariableWrapper(False)
     #define the action that will get applied to new features
     def features_action(input_mode, the_id, features):
+        if feature_length.var == -1:
+            feature_length.var = len(features)
+        elif len(features) != feature_length.var:
+            if (features_warned_about_varying_lengths.var == False):
+                print("Warning - your feature lengths are not consistent." +
+                       "The first feature had length " + str(feature_length.var) + 
+                       ", but " + str(the_id) + "has length " + 
+                       str(len(features)) + ". This could cause an error later." +
+                       "This is the only time such a warning will be printed")
+                features_warned_about_varying_lengths.var = True
         if (the_id in id_to_split_names):
             split_names = id_to_split_names[the_id]
             for split_name in split_names:

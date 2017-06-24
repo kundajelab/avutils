@@ -3,12 +3,15 @@ avutils/dinuc_shuffle.py
 avutils/dynamic_enum.py
 avutils/error_messages.py
 avutils/file_processing.py
+avutils/matplotlib_helpers.py
 avutils/perf_stats.py
 avutils/util.py
 avutils.egg-info/PKG-INFO
 avutils.egg-info/SOURCES.txt
 avutils.egg-info/dependency_links.txt
 avutils.egg-info/top_level.txt
+avutils/yaml_data_import/__init__.py
+avutils/yaml_data_import/import_data.py
 scripts/make_hdf5
 scripts/shuffle_corresponding_lines
 test/test_dinuc_shuffle.py
