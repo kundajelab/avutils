@@ -15,7 +15,7 @@ yaml.add_representer(
 yaml.add_constructor(BaseResolver.DEFAULT_MAPPING_TAG,
     lambda constructor, node: OrderedDict(constructor.construct_pairs(node)))
 from . import error_messages
-from . import util
+from . import util 
 
 
 def get_file_handle(filename,mode="r"):
@@ -374,12 +374,36 @@ class Hdf5BufferedDatasetWriter(object):
         if (len(self.the_buffer) == self.buffer_size):
             self.flush()
 
+    def write_all(self, entries):
+        self.the_buffer.extend(entries)
+        if (len(self.the_buffer) > self.buffer_size):
+            self.flush()
+
     def flush(self):
         self.dataset[self.written_so_far:
                      (self.written_so_far+len(self.the_buffer))] =\
                      self.the_buffer
         self.written_so_far += len(self.the_buffer)
         self.the_buffer = []
+
+
+def batch_execute_hdf5_to_hdf5(input_dataset, output_dataset, batch_action,
+                               batch_size=10, buffer_size=10000,
+                               progress_update=None):
+    print(input_dataset)
+    input_dataset_length = len(input_dataset) 
+    start_idx = 0
+    hdf5_buffered_writer = Hdf5BufferedDatasetWriter(output_dataset,
+                                                     buffer_size=buffer_size)
+    while start_idx < input_dataset_length:
+        end_idx = min(start_idx+batch_size, input_dataset_length)
+        input_batch = input_dataset[start_idx:end_idx]
+        hdf5_buffered_writer.write_all(batch_action(input_batch))
+        start_idx += batch_size
+        if (progress_update is not None):
+            if (int(end_idx/progress_update) > int(start_idx/progress_update)):
+                print("Processed",end_idx,"items")
+    hdf5_buffered_writer.flush()
 
 
 def write_to_file(output_file, contents):
