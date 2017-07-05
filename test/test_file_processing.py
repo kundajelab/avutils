@@ -22,8 +22,8 @@ class TestFileProcessing(unittest.TestCase):
             input_dataset=input_dataset,
             output_dataset=output_dataset,
             batch_action=batch_action,
-            batch_size=10,
-            buffer_size=100,
+            input_batch_size=10,
+            output_buffer_size=100,
             progress_update=50)  
 
         np.testing.assert_equal(np.array(output_dataset),inp_arr+1)

@@ -388,20 +388,22 @@ class Hdf5BufferedDatasetWriter(object):
 
 
 def batch_execute_hdf5_to_hdf5(input_dataset, output_dataset, batch_action,
-                               batch_size=10, buffer_size=10000,
+                               input_batch_size=10000,
+                               output_buffer_size=10000,
                                progress_update=None):
     input_dataset_length = len(input_dataset) 
     start_idx = 0
-    hdf5_buffered_writer = Hdf5BufferedDatasetWriter(output_dataset,
-                                                     buffer_size=buffer_size)
+    hdf5_buffered_writer = Hdf5BufferedDatasetWriter(
+                            output_dataset,
+                            buffer_size=output_buffer_size)
     while start_idx < input_dataset_length:
-        end_idx = min(start_idx+batch_size, input_dataset_length)
+        end_idx = min(start_idx+input_batch_size, input_dataset_length)
         input_batch = input_dataset[start_idx:end_idx]
         hdf5_buffered_writer.write_all(batch_action(input_batch))
-        start_idx += batch_size
         if (progress_update is not None):
             if (int(end_idx/progress_update) > int(start_idx/progress_update)):
                 print("Processed",end_idx,"items")
+        start_idx += input_batch_size
     hdf5_buffered_writer.flush()
 
 
