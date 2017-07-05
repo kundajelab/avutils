@@ -390,7 +390,6 @@ class Hdf5BufferedDatasetWriter(object):
 def batch_execute_hdf5_to_hdf5(input_dataset, output_dataset, batch_action,
                                batch_size=10, buffer_size=10000,
                                progress_update=None):
-    print(input_dataset)
     input_dataset_length = len(input_dataset) 
     start_idx = 0
     hdf5_buffered_writer = Hdf5BufferedDatasetWriter(output_dataset,
