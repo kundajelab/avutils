@@ -409,6 +409,9 @@ def write_to_file(output_file, contents):
     output_file_handle = get_file_handle(output_file, 'w')
     write_to_file_handle(output_file_handle, contents)
 
+def append_to_file(output_file, contents):
+    output_file_handle = get_file_handle(output_file, 'a')
+    write_to_file_handle(output_file_handle, contents)
 
 def write_to_file_handle(output_file_handle, contents):
     output_file_handle.write(contents)
