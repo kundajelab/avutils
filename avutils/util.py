@@ -31,6 +31,10 @@ class GetBest(object):
     def get_best_obj(self):
         return self.best_object
 
+    def set_initial_values(self, best_object, best_val):
+        self.best_object = best_object
+        self.best_val = best_val
+
 
 class GetBestMax(GetBest):
     def is_better(self, val):
