@@ -6,11 +6,13 @@ config = {
     'description': 'factoring out code from av_scripts',
     'url': 'NA',
     'download_url': 'https://github.com/kundajelab/avutils',
-    'version': '0.2.2',
+    'version': '0.2.3',
     'packages': ['avutils', 'avutils.yaml_data_import'],
     'setup_requires': [],
     'install_requires': [], #gzip, re...blah
-    'scripts': ["scripts/make_hdf5", "scripts/shuffle_corresponding_lines"],
+    'scripts': ["scripts/make_hdf5",
+                "scripts/shuffle_corresponding_lines",
+                "scripts/make_skeleton"],
     'name': 'avutils'
 }
 

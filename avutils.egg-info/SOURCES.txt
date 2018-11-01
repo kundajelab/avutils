@@ -15,3 +15,4 @@ avutils/yaml_data_import/import_data.py
 scripts/make_hdf5
 scripts/shuffle_corresponding_lines
 test/test_dinuc_shuffle.py
+test/test_file_processing.py
