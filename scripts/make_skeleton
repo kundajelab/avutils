@@ -19,10 +19,10 @@ import os
     ofh.write("def "+options.inputFile+"(options):\n\n")
     argparseBit = """
 if __name__ == "__main__":
-    import argparse;
-    parser = argparse.ArgumentParser();
+    import argparse
+    parser = argparse.ArgumentParser()
     
-    options = parser.parse_args();
+    options = parser.parse_args()
 """
     ofh.write(argparseBit)
     ofh.write("    "+options.inputFile+"(options)\n")
