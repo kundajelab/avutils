@@ -39,7 +39,7 @@ def default_tab_seppd(s):
 
 
 def trim_newline(s):
-    return s.rstrip('\r\n')
+    return s.decode("utf-8").rstrip('\r\n')
 
 
 def split_by_delimiter(s, delimiter):
@@ -346,14 +346,21 @@ class FastaIterator(object):
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         self.line_count += 1
         print_progress(self.progress_update,
                        self.line_count,
                        self.progress_update_file_name)
         #should raise StopIteration if at end of lines
-        key_line = trim_newline(self.file_handle.next())
-        sequence = trim_newline(self.file_handle.next())
+        if (hasattr(self.file_handle, 'next')):
+            key_line = trim_newline(self.file_handle.next())
+            sequence = trim_newline(self.file_handle.next())
+        else:
+            key_line = trim_newline(self.file_handle.__next__())
+            sequence = trim_newline(self.file_handle.__next__())
         if (key_line.startswith(">")==False):
             raise RuntimeError("Expecting a record name line that begins "
                                +"with > but got "+str(key_line))
